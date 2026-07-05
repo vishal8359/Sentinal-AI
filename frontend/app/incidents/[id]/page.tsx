@@ -31,6 +31,7 @@ export default function IncidentPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionMessage, setActionMessage] = useState('');
+  const [isPreparing, setIsPreparing] = useState(false);
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
   const wsBase = apiBase.replace('http', 'ws');
@@ -78,6 +79,31 @@ export default function IncidentPage({ params }: { params: { id: string } }) {
     }
   }, [incident]);
 
+  useEffect(() => {
+    if (!incident || !incidentId) return;
+    const hasPendingApproval = incident.approvals.some((approval) => approval.status === 'pending');
+    if (hasPendingApproval || incident.agent_runs.length > 0 || isPreparing) return;
+
+    const bootstrapInvestigation = async () => {
+      try {
+        setIsPreparing(true);
+        setActionMessage('Starting investigation...');
+        const response = await fetch(`${apiBase}/incidents/${incidentId}/run`, { method: 'POST' });
+        if (!response.ok) throw new Error('Investigation request failed');
+        const refreshed = await fetch(`${apiBase}/incidents/${incidentId}`);
+        if (!refreshed.ok) throw new Error('Unable to refresh incident');
+        setIncident(await refreshed.json());
+        setActionMessage('Investigation ready. Please approve or reject.');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Investigation request failed');
+      } finally {
+        setIsPreparing(false);
+      }
+    };
+
+    bootstrapInvestigation();
+  }, [apiBase, incident, incidentId, isPreparing]);
+
   const latestRootCause = useMemo(() => {
     const rootCauseRun = incident?.agent_runs.find((run) => run.agent_name === 'Root Cause');
     if (!rootCauseRun) return null;
@@ -100,6 +126,16 @@ export default function IncidentPage({ params }: { params: { id: string } }) {
 
   const triggerAction = async (action: 'approve' | 'reject') => {
     try {
+      const hasPendingApproval = incident?.approvals.some((approval) => approval.status === 'pending');
+      if (!hasPendingApproval) {
+        setActionMessage('Preparing the investigation workflow...');
+        const runResponse = await fetch(`${apiBase}/incidents/${incidentId}/run`, { method: 'POST' });
+        if (!runResponse.ok) throw new Error('Investigation setup failed');
+        const refreshed = await fetch(`${apiBase}/incidents/${incidentId}`);
+        if (!refreshed.ok) throw new Error('Unable to refresh incident');
+        setIncident(await refreshed.json());
+      }
+
       const response = await fetch(`${apiBase}/incidents/${incidentId}/${action}`, { method: 'POST' });
       if (!response.ok) throw new Error('Approval request failed');
       const data = await response.json();
@@ -228,8 +264,8 @@ export default function IncidentPage({ params }: { params: { id: string } }) {
                 </div>
               )) : <p className="text-sm text-slate-400">No remediation steps yet.</p>}
               <div className="mt-5 flex gap-3">
-                <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500" onClick={() => triggerAction('approve')}>Approve</button>
-                <button className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500" onClick={() => triggerAction('reject')}>Reject</button>
+                <button className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60" disabled={isPreparing} onClick={() => triggerAction('approve')}>Approve</button>
+                <button className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60" disabled={isPreparing} onClick={() => triggerAction('reject')}>Reject</button>
               </div>
             </div>
           </div>
