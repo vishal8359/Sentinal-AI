@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -65,7 +66,7 @@ def health_check() -> dict[str, Any]:
 def run_log_agent_endpoint(incident_id: str, payload: RunLogAgentRequest | None = None) -> dict[str, Any]:
     ensure_incident(incident_id)
     result = run_log_agent(incident_id, log_excerpt=payload.log_excerpt if payload else None)
-    record_agent_run(incident_id, "Log Analysis", "done", payload.log_excerpt or "sample log", str(result), 0.91)
+    record_agent_run(incident_id, "Log Analysis", "done", payload.log_excerpt or "sample log", json.dumps(result), 0.91)
     return {"incident_id": incident_id, "result": result}
 
 

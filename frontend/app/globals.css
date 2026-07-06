@@ -2,11 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
   color-scheme: dark;
 }
 
 body {
   @apply bg-slate-950 text-slate-100 min-h-screen;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Skeleton shimmer for loading cards ──────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-line {
+  @apply rounded-md;
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.06) 25%,
+    rgba(148, 163, 184, 0.14) 50%,
+    rgba(148, 163, 184, 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ─── Indeterminate progress bar for running agents ──────────────────────── */
+@keyframes progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+.progress-bar-track {
+  @apply relative w-full h-[3px] overflow-hidden rounded-full;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.progress-bar-track::after {
+  content: '';
+  @apply absolute inset-y-0 left-0 w-[40%] rounded-full;
+  background: linear-gradient(90deg, transparent, #38bdf8, #22d3ee, transparent);
+  animation: progress-slide 1.4s ease-in-out infinite;
+}
+
+/* ─── Live pulse for STREAMING badge ─────────────────────────────────────── */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.live-pulse {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Status glow ring for running nodes ─────────────────────────────────── */
+@keyframes status-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.3); }
+  50% { box-shadow: 0 0 12px 4px rgba(251, 191, 36, 0.15); }
+}
+
+.running-glow {
+  animation: status-glow 2s ease-in-out infinite;
+}
+
+/* ─── Confidence ring ────────────────────────────────────────────────────── */
+.confidence-ring {
+  @apply inline-flex items-center justify-center relative;
+}
+
+.confidence-ring svg {
+  transform: rotate(-90deg);
+}
+
+.confidence-ring .ring-track {
+  stroke: rgba(148, 163, 184, 0.15);
+}
+
+.confidence-ring .ring-fill {
+  transition: stroke-dashoffset 0.6s ease-out;
+}
+
+/* ─── React Flow overrides ───────────────────────────────────────────────── */
+.react-flow__node {
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+.react-flow__attribution {
+  display: none !important;
 }
