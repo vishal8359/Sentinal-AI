@@ -336,22 +336,31 @@ export default function IncidentPage({ params }: { params: { id: string } }) {
               ) : (
                 <p className="text-sm text-slate-500 italic">No remediation steps yet.</p>
               )}
-              <div className="mt-5 flex gap-3">
-                <button
-                  className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 transition-all hover:bg-emerald-500 hover:shadow-emerald-900/40 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={isPreparing}
-                  onClick={() => triggerAction('approve')}
-                >
-                  ✓ Approve
-                </button>
-                <button
-                  className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-900/30 transition-all hover:bg-rose-500 hover:shadow-rose-900/40 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={isPreparing}
-                  onClick={() => triggerAction('reject')}
-                >
-                  ✕ Reject
-                </button>
-              </div>
+              {incident?.approvals.some((a) => a.status === 'pending') ? (
+                <div className="mt-5 flex gap-3">
+                  <button
+                    className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/30 transition-all hover:bg-emerald-500 hover:shadow-emerald-900/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={isPreparing}
+                    onClick={() => triggerAction('approve')}
+                  >
+                    ✓ Approve
+                  </button>
+                  <button
+                    className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-900/30 transition-all hover:bg-rose-500 hover:shadow-rose-900/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={isPreparing}
+                    onClick={() => triggerAction('reject')}
+                  >
+                    ✕ Reject
+                  </button>
+                </div>
+              ) : incident?.approvals.length ? (
+                <div className="mt-5 rounded-xl border border-white/10 bg-slate-900/40 p-3 text-sm">
+                  <span className="text-slate-400">Action taken: </span>
+                  <span className={incident.approvals.at(-1)?.status === 'approved' ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                    {incident.approvals.at(-1)?.status.toUpperCase()}
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
