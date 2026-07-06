@@ -48,7 +48,8 @@ export default function IncidentPage({ params }: { params: { id: string } }) {
   const [actionMessage, setActionMessage] = useState('');
   const [isPreparing, setIsPreparing] = useState(false);
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const apiBaseRaw = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  const apiBase = apiBaseRaw.replace(/\/$/, '');
   const wsBase = apiBase.replace('http', 'ws');
 
   // ── Fetch incident data ──────────────────────────────────────────────────
